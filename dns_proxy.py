@@ -1,6 +1,14 @@
 from dnslib import *
 from dnslib import server
 
+# Customize the port and address of your local server to suit your needs (e.g. localhost -> 0.0.0.0)
+local_addr = 'localhost'
+local_port = 53
+
+# Customize the address and port of the external DNS server
+external_dns_server_addr = '192.168.20.1'
+external_dns_server_port = 53
+
 class SpecialResolver:
     def resolve(self, request, handler):
         d = request.reply()
@@ -26,14 +34,13 @@ class SpecialResolver:
 
         # Recursively query another DNS server for other domains
         else:
-            a = DNSRecord.parse(DNSRecord.question(q_name).send('192.168.20.1', 53))
+            a = DNSRecord.parse(DNSRecord.question(q_name).send(external_dns_server_addr, external_dns_server_port))
             for rr in a.rr:
                 d.add_answer(rr)
         return d
 
 r = SpecialResolver()
-# Customize the port and address to suit your needs (e.g. localhost -> 0.0.0.0)
-s = server.DNSServer(r, port=53, address="localhost")
+s = server.DNSServer(r, port=local_port, address=local_addr)
 s.start_thread()
 
 while True:
